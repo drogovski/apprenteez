@@ -3,7 +3,7 @@ package com.drogovski.apprenteez
 
 import cats.effect.IOApp
 import org.http4s.ember.server.EmberServerBuilder
-import com.drogovski.apprenteez.http.routes.HealthRoutes
+import com.drogovski.apprenteez.http.HttpApi
 import cats.effect.IO
 import pureconfig.ConfigSource
 import com.drogovski.apprenteez.config.EmberConfig
@@ -19,7 +19,7 @@ object Application extends IOApp.Simple{
       .default[IO]
       .withHost(config.host)
       .withPort(config.port)
-      .withHttpApp(HealthRoutes[IO].routes.orNotFound)
+      .withHttpApp(HttpApi[IO].endpoits.orNotFound)
       .build
       .use(_ => IO.println("Server ready! Elooooo") *> IO.never)
  
