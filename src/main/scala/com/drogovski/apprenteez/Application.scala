@@ -9,11 +9,11 @@ import pureconfig.ConfigSource
 import com.drogovski.apprenteez.config.EmberConfig
 import pureconfig.error.ConfigReaderException
 import com.drogovski.apprenteez.config.syntax.loadF
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object Application extends IOApp.Simple{
-  
-  val configSource = ConfigSource.default.load[EmberConfig]
-
+  given logger: Logger[IO] = Slf4jLogger.getLogger[IO] 
   override def run = ConfigSource.default.loadF[IO, EmberConfig].flatMap { config =>
     EmberServerBuilder
       .default[IO]
