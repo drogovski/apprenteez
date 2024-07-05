@@ -10,14 +10,14 @@ import org.http4s.dsl.impl.*
 import org.http4s.server.*
 import cats.effect.*
 import cats.syntax.all.*
-import scala.collection.mutable
 import java.util.UUID
 import com.drogovski.apprenteez.core.*
 import com.drogovski.apprenteez.domain.job.*
 import com.drogovski.apprenteez.http.responses.FailureResponse
+import com.drogovski.apprenteez.http.validation.syntax.*
 import com.drogovski.apprenteez.logging.syntax.*
 
-class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4sDsl[F] {
+class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends HttpValidationDsl[F] {
 
   // POST /jobs?offset=x&limit=y {filters} // TODO add query params and filters
   private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] { case POST -> Root =>
@@ -38,25 +38,27 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4s
   // POST /jobs/create { jobInfo }
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "create" =>
-      for {
-        jobInfo <- req.as[JobInfo].logError(e => s"Failed to parse info: $e")
-        jobId   <- jobs.create("TODO@beebeck.com", jobInfo)
-        resp    <- Created(jobId)
-      } yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for {
+          jobId <- jobs.create("TODO@beebeck.com", jobInfo)
+          resp  <- Created(jobId)
+        } yield resp
+      }
   }
 
   // PUT /jobs/uuid { jobInfo }
   private val updateJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ PUT -> Root / UUIDVar(id) =>
-      for {
-        jobInfo     <- req.as[JobInfo]
-        maybeNewJob <- jobs.update(id, jobInfo)
-        resp <- maybeNewJob match {
-          case Some(job) => Ok(job)
-          case None =>
-            NotFound(FailureResponse(s"Cannot update the job. ID $id not found."))
-        }
-      } yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for {
+          maybeNewJob <- jobs.update(id, jobInfo)
+          resp <- maybeNewJob match {
+            case Some(job) => Ok(job)
+            case None =>
+              NotFound(FailureResponse(s"Cannot update the job. ID $id not found."))
+          }
+        } yield resp
+      }
   }
 
   // DELETE /jobs/uuid
