@@ -5,11 +5,16 @@ import doobie.*
 import doobie.hikari.HikariTransactor
 import doobie.implicits.*
 import doobie.util.*
+import scala.io.StdIn
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import com.drogovski.apprenteez.domain.job.*
 import com.drogovski.apprenteez.core.LiveJobs
-import scala.io.StdIn
 
 object JobsPlayground extends IOApp.Simple {
+
+  given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
+
   val postgresResource: Resource[IO, HikariTransactor[IO]] = for {
     ec <- ExecutionContexts.fixedThreadPool(16)
     xa <- HikariTransactor.newHikariTransactor[IO](

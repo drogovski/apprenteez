@@ -19,7 +19,7 @@ import com.drogovski.apprenteez.fixtures.JobFixture
 import com.drogovski.apprenteez.core.*
 import com.drogovski.apprenteez.domain.job.*
 import com.drogovski.apprenteez.http.routes.JobRoutes
-import doobie.util.update.Update
+import com.drogovski.apprenteez.domain.pagination.Pagination
 
 class JobRoutesSpec
     extends AsyncFreeSpec
@@ -28,8 +28,12 @@ class JobRoutesSpec
     with Http4sDsl[IO]
     with JobFixture {
   val jobs: Jobs[IO] = new Jobs[IO] {
+
     override def create(ownerEmail: String, jobInfo: JobInfo): IO[UUID] =
       IO.pure(NewJobUuid)
+    override def all(filter: JobFilter, pagination: Pagination): IO[List[Job]] =
+      if (filter.remote) IO.pure(List())
+      else IO.pure(List(AwesomeJob))
     override def all(): IO[List[Job]] =
       IO.pure(List(AwesomeJob))
     override def find(id: UUID): IO[Option[Job]] =
@@ -63,11 +67,24 @@ class JobRoutesSpec
       for {
         response <- jobRoutes.orNotFound.run(
           Request(method = Method.POST, uri = uri"/jobs/")
+            .withEntity(JobFilter())
         )
         retrieved <- response.as[List[Job]]
       } yield {
         response.status shouldBe Status.Ok
         retrieved shouldBe List(AwesomeJob)
+      }
+    }
+    "should return all jobs that satisfy filter" in {
+      for {
+        response <- jobRoutes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/jobs/")
+            .withEntity(JobFilter(remote = true))
+        )
+        retrieved <- response.as[List[Job]]
+      } yield {
+        response.status shouldBe Status.Ok
+        retrieved shouldBe List()
       }
     }
     "should create a new job" in {
