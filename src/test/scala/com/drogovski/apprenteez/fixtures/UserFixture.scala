@@ -57,4 +57,20 @@ trait UserFixture {
     Some("Adobe"),
     Role.RECRUITER
   )
+
+  val NewUserDaniel = NewUserInfo(
+    danielEmail,
+    danielPassword,
+    Some("Daniel"),
+    Some("Ciocirlan"),
+    Some("Rock the Jvm")
+  )
+
+  val NewUserRiccardo = NewUserInfo(
+    riccardoEmail,
+    riccardoPassword,
+    Some("Riccardo"),
+    Some("Cardin"),
+    Some("Rock the JVM")
+  )
 }

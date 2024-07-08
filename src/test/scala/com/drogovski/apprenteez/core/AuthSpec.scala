@@ -33,7 +33,6 @@ class AuthSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with UserFix
       idStore,
       key
     )
-
   }
 
   "Auth 'algebra'" - {
