@@ -12,14 +12,15 @@ import com.drogovski.apprenteez.config.AppConfig
 import com.drogovski.apprenteez.config.syntax.loadF
 import com.drogovski.apprenteez.modules.*
 import cats.effect.IOLocal
+import com.drogovski.apprenteez.domain.security
 
 object Application extends IOApp.Simple {
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
   override def run = ConfigSource.default.loadF[IO, AppConfig].flatMap {
-    case AppConfig(postgresConfig, emberConfig) =>
+    case AppConfig(postgresConfig, emberConfig, securityConfig) =>
       val appResource = for {
         xa      <- Database.makePostgresResource[IO](postgresConfig)
-        core    <- Core[IO](xa)
+        core    <- Core[IO](xa)(securityConfig)
         httpApi <- HttpApi[IO](core)
         server <- EmberServerBuilder
           .default[IO]

@@ -1,4 +1,4 @@
-package com.drogovski.apprenteez
+package com.drogovski.apprenteez.http.routes
 
 import cats.effect.*
 import cats.implicits.*

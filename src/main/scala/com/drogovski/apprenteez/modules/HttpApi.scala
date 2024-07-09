@@ -13,9 +13,10 @@ import com.drogovski.apprenteez.http.routes.*
 class HttpApi[F[_]: Concurrent: Logger] private (core: Core[F]) {
   private val healthRoutes = HealthRoutes[F].routes
   private val jobRoutes    = JobRoutes[F](core.jobs).routes
+  private val authRoutes   = AuthRoutes[F](core.auth).routes
 
   val endpoits = Router(
-    "/api" -> (healthRoutes <+> jobRoutes)
+    "/api" -> (healthRoutes <+> jobRoutes <+> authRoutes)
   )
 }
 

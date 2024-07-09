@@ -79,9 +79,22 @@ class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpV
     } yield resp
   }
 
+  // DELETE /auth/users/@email
+  private val deleteUserRoute: AuthRoute[F] = {
+    case req @ DELETE -> Root / "users" / email asAuthed user =>
+      auth.delete(email).flatMap {
+        case true  => Ok()
+        case false => NotFound()
+      }
+  }
+
   val unauthedRoutes = loginRoute <+> createUserRoute
   val authedRoutes =
-    securedHandler.liftService(TSecAuthService(changePasswordRoute.orElse(logoutRoute)))
+    securedHandler.liftService(
+      changePasswordRoute.restrictedTo(allRoles) |+|
+        logoutRoute.restrictedTo(allRoles) |+|
+        deleteUserRoute.restrictedTo(adminOnly)
+    )
 
   val routes = Router(
     "/auth" -> (unauthedRoutes <+> authedRoutes)

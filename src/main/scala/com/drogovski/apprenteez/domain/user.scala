@@ -1,6 +1,8 @@
 package com.drogovski.apprenteez.domain
 
 import doobie.util.meta.Meta
+import tsec.authorization.AuthGroup
+import tsec.authorization.SimpleAuthEnum
 
 object user {
   final case class User(
@@ -29,4 +31,8 @@ object user {
       Meta[String].timap[Role](Role.valueOf)(_.toString)
   }
 
+  given roleAuthEnum: SimpleAuthEnum[Role, String] with {
+    override val values: AuthGroup[Role]     = AuthGroup(Role.ADMIN, Role.RECRUITER)
+    override def getRepr(role: Role): String = role.toString
+  }
 }
